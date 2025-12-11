@@ -1,0 +1,179 @@
+{
+  "repo_notes": [
+    {
+      "content": "Это репозиторий серверной части корпоративного мессенджера Compass On-premise. Система построена на микросервисной архитектуре с использованием Go и PHP. Основные компоненты: 12 Go-микросервисов для обработки событий, WebSocket соединений, push-уведомлений и кэширования; PHP-монолит с 10 модулями для бизнес-логики (Conversation, Company, Thread, Speaker, FileBalancer, Pivot, Userbot, Announcement, Federation, Premise, Jitsi); система управления базами данных; компоненты Jitsi для видеозвонков. Коммуникация между сервисами осуществляется через RabbitMQ, TCP, gRPC, Socket API (HTTP POST) и WebSocket. Система использует шардинг баз данных для масштабирования. Документация должна быть на русском языке и ориентирована на новых разработчиков, которые будут дорабатывать систему.",
+      "author": "Команда разработки"
+    },
+    {
+      "content": "Критически важные компоненты для понимания архитектуры: go_sender (WebSocket сервер для отправки событий клиентам), go_event (система событий и подписок), php_monolith (основной монолит с бизнес-логикой), go_database_controller (управление базами данных и миграции). Папка php_monolith/src/Compass содержит все модули монолита. Каждый Go-микросервис имеет структуру: api/includes (основная логика), api/conf (конфигурация), www (HTTP/gRPC/TCP обработчики), main.go (точка входа).",
+      "author": "Команда разработки"
+    },
+    {
+      "content": "Важные директории для документации: go_*/api/includes - основная бизнес-логика микросервисов, php_monolith/src/Compass/*/api/includes - бизнес-логика модулей PHP монолита, go_database_controller/sql - миграции и схемы баз данных, php_monolith/src/Compass/*/sql - SQL схемы модулей, все Dockerfile и entrypoint.sh файлы для понимания развертывания, конфигурационные файлы в api/conf директориях.",
+      "author": "Команда разработки"
+    }
+  ],
+  "pages": [
+    {
+      "title": "Обзор архитектуры",
+      "purpose": "Высокоуровневый обзор архитектуры системы Compass On-premise: микросервисная архитектура, основные компоненты, протоколы коммуникации (RabbitMQ, TCP, gRPC, Socket API, WebSocket), общий поток данных между сервисами",
+      "parent": null
+    },
+    {
+      "title": "Go микросервисы",
+      "purpose": "Общий обзор всех Go-микросервисов, их назначение и взаимодействие между ними",
+      "parent": "Обзор архитектуры"
+    },
+    {
+      "title": "go_sender - WebSocket сервер",
+      "purpose": "Документация микросервиса go_sender: управление WebSocket соединениями с клиентами, отправка событий в реальном времени, методы API (setToken, sendEvent, sendEventToAll, getOnlineConnectionsByUserId, closeConnectionsByUserId, addUsersToThread, getOnlineUsers, sendVoIP, sendTypingEvent), структура api/includes, обработка WebSocket соединений в www",
+      "parent": "Go микросервисы"
+    },
+    {
+      "title": "go_sender_balancer - Балансировщик",
+      "purpose": "Документация микросервиса go_sender_balancer: балансировка нагрузки между нодами go_sender, распределение подключений, получение онлайн пользователей с нод, TCP gateway для коммуникации с нодами",
+      "parent": "Go микросервисы"
+    },
+    {
+      "title": "go_company - Сервис компаний",
+      "purpose": "Документация микросервиса go_company: работа с данными компаний, изоляция данных по компаниям (isolation), глобальный observer, коммуникация с PHP монолитом через Socket API, структура api/includes/type/isolation",
+      "parent": "Go микросервисы"
+    },
+    {
+      "title": "go_event - Система событий",
+      "purpose": "Документация микросервиса go_event: система событий и подписок (event broker), диспетчеризация событий, обработка подписок, интеграция с RabbitMQ для доставки событий, структура ApplicationEvent, методы dispatch и handle, подписки ботов (SystemBot)",
+      "parent": "Go микросервисы"
+    },
+    {
+      "title": "go_pusher - Push-уведомления",
+      "purpose": "Документация микросервиса go_pusher: отправка push-уведомлений через Firebase, APNS, Huawei, GWSolution, обработка текстовых и VoIP push-уведомлений, обновление badge, очереди задач (textPushQueue, voipPushQueue, jitsiVoipPushQueue), observer для обработки очередей",
+      "parent": "Go микросервисы"
+    },
+    {
+      "title": "go_rating - Система рейтингов",
+      "purpose": "Документация микросервиса go_rating: сбор и обработка рейтингов пользователей, скрапинг данных (user_action, user_answer_time, user_screen_time), интеграция с pivot модулем",
+      "parent": "Go микросервисы"
+    },
+    {
+      "title": "go_activity - Активность пользователей",
+      "purpose": "Документация микросервиса go_activity: отслеживание активности пользователей, observer для обработки данных активности, HTTP и gRPC API",
+      "parent": "Go микросервисы"
+    },
+    {
+      "title": "Кэширующие сервисы",
+      "purpose": "Обзор кэширующих микросервисов: go_company_cache, go_pivot_cache, go_userbot_cache - их назначение, структура кэша, методы обновления и инвалидации",
+      "parent": "Go микросервисы"
+    },
+    {
+      "title": "go_file_auth - Авторизация файлов",
+      "purpose": "Документация микросервиса go_file_auth: авторизация доступа к файлам, проверка прав доступа, интеграция с php_file_node",
+      "parent": "Go микросервисы"
+    },
+    {
+      "title": "go_database_controller - Управление БД",
+      "purpose": "Документация микросервиса go_database_controller: управление базами данных компаний, создание и управление MySQL инстансами, миграции баз данных, порт-регистр (port registry), бэкапы, релокация данных, структура sql/ директории с миграциями и схемами",
+      "parent": "Go микросервисы"
+    },
+    {
+      "title": "PHP сервисы",
+      "purpose": "Общий обзор PHP сервисов: php_monolith (основной монолит), php_file_node (работа с файлами), php_migration (миграции), их взаимодействие с Go микросервисами",
+      "parent": "Обзор архитектуры"
+    },
+    {
+      "title": "php_monolith - Основной монолит",
+      "purpose": "Документация PHP монолита: структура приложения, точка входа start.php, роутинг через Socket API, модульная архитектура, структура src/Compass с модулями, обработка запросов через RouteHandler",
+      "parent": "PHP сервисы"
+    },
+    {
+      "title": "Модуль Conversation",
+      "purpose": "Документация модуля Conversation в php_monolith: работа с диалогами и сообщениями, API методы для отправки сообщений, получения истории, управления диалогами, структура api/includes, контроллеры messages, conversations, groups",
+      "parent": "php_monolith - Основной монолит"
+    },
+    {
+      "title": "Модуль Company",
+      "purpose": "Документация модуля Company в php_monolith: управление компаниями, пользователями компаний, профилями, авторизацией, структура api/includes с контроллерами company_auth, company_profile, company_user, company_member",
+      "parent": "php_monolith - Основной монолит"
+    },
+    {
+      "title": "Модуль Thread",
+      "purpose": "Документация модуля Thread в php_monolith: работа с тредами (ветками обсуждений), создание и управление тредами, API для работы с комментариями в тредах",
+      "parent": "php_monolith - Основной монолит"
+    },
+    {
+      "title": "Модуль Speaker",
+      "purpose": "Документация модуля Speaker в php_monolith: функционал спикеров и голосовых сообщений, обработка аудио, интеграция с медиа-сервисами",
+      "parent": "php_monolith - Основной монолит"
+    },
+    {
+      "title": "Модуль FileBalancer",
+      "purpose": "Документация модуля FileBalancer в php_monolith: балансировка загрузки файлов, управление файловыми нодами, распределение нагрузки при загрузке файлов",
+      "parent": "php_monolith - Основной монолит"
+    },
+    {
+      "title": "Модуль Pivot",
+      "purpose": "Документация модуля Pivot в php_monolith: центральный модуль системы, управление пользователями, компаниями, тарифами, биллингом, безопасностью, LDAP интеграцией, контроллеры pivot_security, pivot_company, pivot_stage, pivot_ldap, tariff, billing",
+      "parent": "php_monolith - Основной монолит"
+    },
+    {
+      "title": "Модуль Userbot",
+      "purpose": "Документация модуля Userbot в php_monolith: функционал ботов и автоматизации, создание и управление ботами, обработка команд ботов, интеграция с go_userbot_cache",
+      "parent": "php_monolith - Основной монолит"
+    },
+    {
+      "title": "Модуль Announcement",
+      "purpose": "Документация модуля Announcement в php_monolith: система объявлений и уведомлений, создание и рассылка объявлений компаниям и пользователям",
+      "parent": "php_monolith - Основной монолит"
+    },
+    {
+      "title": "Модуль Federation",
+      "purpose": "Документация модуля Federation в php_monolith: федерация между компаниями, SSO интеграция, LDAP аутентификация, обмен данными между компаниями",
+      "parent": "php_monolith - Основной монолит"
+    },
+    {
+      "title": "Модуль Premise",
+      "purpose": "Документация модуля Premise в php_monolith: функционал для on-premise развертывания, управление лицензиями, конфигурация on-premise инсталляций",
+      "parent": "php_monolith - Основной монолит"
+    },
+    {
+      "title": "Модуль Jitsi",
+      "purpose": "Документация модуля Jitsi в php_monolith: интеграция с Jitsi для видеозвонков, создание конференций, управление видеозвонками, интеграция с go_pusher для VoIP push",
+      "parent": "php_monolith - Основной монолит"
+    },
+    {
+      "title": "php_file_node - Файловый сервис",
+      "purpose": "Документация сервиса php_file_node: обработка загрузки и хранения файлов, работа с медиа-файлами, интеграция с go_file_auth для авторизации, cron задачи для очистки файлов",
+      "parent": "PHP сервисы"
+    },
+    {
+      "title": "php_migration - Миграции",
+      "purpose": "Документация сервиса php_migration: выполнение миграций баз данных, структура миграций, процесс обновления схем БД",
+      "parent": "PHP сервисы"
+    },
+    {
+      "title": "Jitsi компоненты",
+      "purpose": "Обзор компонентов Jitsi для видеозвонков: jitsi_custom, jitsi_prosody, jitsi_jicofo, jitsi_web, jitsi_web_wrap, jvb_wrap, join_web - их назначение и взаимодействие",
+      "parent": "Обзор архитектуры"
+    },
+    {
+      "title": "База данных и шардинг",
+      "purpose": "Документация системы баз данных: шардинг по компаниям, структура баз данных, миграции, управление через go_database_controller, схемы в sql/ директориях, Manticore для поиска",
+      "parent": "Обзор архитектуры"
+    },
+    {
+      "title": "Развертывание и Docker",
+      "purpose": "Документация развертывания: Dockerfile файлы для каждого сервиса, entrypoint.sh скрипты, wait-services.sh для ожидания зависимостей, конфигурация через переменные окружения, структура docker-compose",
+      "parent": "Обзор архитектуры"
+    },
+    {
+      "title": "Протоколы коммуникации",
+      "purpose": "Детальная документация протоколов: RabbitMQ для асинхронной коммуникации, TCP для внутренней коммуникации между Go сервисами, gRPC для RPC вызовов, Socket API (HTTP POST) для вызовов между сервисами, WebSocket для клиентских соединений, структура запросов и ответов",
+      "parent": "Обзор архитектуры"
+    },
+    {
+      "title": "Конфигурация",
+      "purpose": "Документация конфигурации: структура конфигурационных файлов в api/conf директориях, переменные окружения, sharding конфигурация, примеры конфигураций, настройка для разных окружений (dev, test, production)",
+      "parent": "Обзор архитектуры"
+    }
+  ]
+}
+
